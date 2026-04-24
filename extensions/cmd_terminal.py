@@ -1,10 +1,8 @@
 import subprocess
 import threading
-import os
 
-def run(editor_instance):
-    # Setup the subprocess for cmd.exe
-    # We use pipes to communicate with the process in the background
+def run(editor):
+    # This runs cmd.exe and sends the output to your editor's console
     process = subprocess.Popen(
         ['cmd.exe'],
         stdin=subprocess.PIPE,
@@ -15,30 +13,17 @@ def run(editor_instance):
         bufsize=1
     )
 
-    def read_output():
-        while True:
-            line = process.stdout.readline()
-            if not line:
-                break
-            editor_instance.show_output(line.strip())
-            
-    def read_errors():
-        while True:
-            line = process.stderr.readline()
-            if not line:
-                break
-            editor_instance.show_output(f"ERR: {line.strip()}")
+    def read_output(pipe):
+        for line in iter(pipe.readline, ''):
+            editor.show_output(line.strip())
 
-    # Start threads to read stdout and stderr so the GUI doesn't freeze
-    threading.Thread(target=read_output, daemon=True).start()
-    threading.Thread(target=read_errors, daemon=True).start()
+    threading.Thread(target=read_output, args=(process.stdout,), daemon=True).start()
+    threading.Thread(target=read_output, args=(process.stderr,), daemon=True).start()
 
-    # Create a command input method for the editor
     def send_command(command):
-        if process.poll() is None: # Check if process is still running
+        if process.poll() is None:
             process.stdin.write(command + "\n")
             process.stdin.flush()
 
-    # Attach the send_command method to the editor instance
-    editor_instance.send_to_terminal = send_command
-    editor_instance.show_output("Terminal Ready: cmd.exe linked.")
+    editor.send_to_terminal = send_command
+    editor.show_output("Terminal extension linked.")
