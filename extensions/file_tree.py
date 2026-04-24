@@ -1,21 +1,20 @@
 import os
-import customtkinter as ctk # Assuming you use CustomTkinter
+import customtkinter as ctk
 
-def run(editor_instance):
-    # This assumes editor_instance has a 'sidebar_frame' attribute
-    sidebar = editor_instance.sidebar_frame
+def run(editor):
+    sidebar = editor.sidebar_frame
     
-    # Clear old items
-    for widget in sidebar.winfo_children():
-        widget.destroy()
-        
-    # List all files in the current directory
+    # Label for the file tree
+    tree_label = ctk.CTkLabel(sidebar, text="FILES", font=("Arial", 12, "bold"))
+    tree_label.pack(pady=(10, 5))
+    
+    # List files
     for filename in os.listdir("."):
-        # Filter for code files
-        if filename.endswith((".py", ".lua", ".json")):
+        if filename.endswith((".py", ".lua", ".txt")):
             btn = ctk.CTkButton(
                 sidebar, 
                 text=filename, 
-                command=lambda f=filename: editor_instance.open_file(f)
+                height=20,
+                command=lambda f=filename: editor.open_file(f)
             )
-            btn.pack(pady=2, padx=5, fill="x")
+            btn.pack(pady=2, padx=10, fill="x")
